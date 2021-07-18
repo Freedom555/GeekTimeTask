@@ -2,6 +2,8 @@ const css = require("css");
 
 const EOF = Symbol("EOF");
 
+const layout = require("./layout.js");
+
 let currentToken = null;
 let currentAttribute = null;
 
@@ -157,6 +159,7 @@ function emit(token) {
       }
       stack.pop();
     }
+    layout(top);
     currentTextNode = null;
   } else if (token.type === "text") {
     if (currentTextNode === null) {
