@@ -214,7 +214,7 @@ void (async function () {
       name: "Freedom",
     },
   });
-  console.log(123)
   let response = await request.send();
   let dom = parser.parseHTML(response.body);
+  console.log(JSON.stringify(dom,null,"    "))
 })();
