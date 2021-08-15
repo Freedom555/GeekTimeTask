@@ -11,12 +11,17 @@ import {
   JSUndefined,
   JSBoolean,
   ObjectEnvironmentRecord,
+  EnvironmentRecord,
 } from "./runtime.js";
 
 export class Evaluator {
   constructor() {
     this.realm = new Realm();
     this.globalObject = new JSObject();
+    this.globalObject.set("log", new JSObject());
+    this.globalObject.get("log").call = (args) => {
+      console.log(args);
+    };
     this.ecs = [
       new ExecutionContext(
         this.realm,
@@ -318,11 +323,42 @@ export class Evaluator {
     let runningEC = this.ecs[this.ecs.length - 1];
     return new Reference(runningEC.lexicalEnviroment, node.name);
   }
+  Arguments(node) {
+    if (node.chidlren.length === 2) {
+      return [];
+    } else {
+      return this.evaluate(node.chidlren[1]);
+    }
+  }
+  ArgumentList(node) {
+    if (node.chidlren.length === 1) {
+      let result = this.evaluate(node.children[0]);
+      if (result instanceof Reference) {
+        result = result.get();
+      }
+      return [result];
+    } else {
+      let result = this.evaluate(node.children[1]);
+      if (result instanceof Reference) {
+        result = result.get();
+      }
+      return this.evaluate(node.chidlren[0]).concat(result);
+    }
+  }
   Block(node) {
     if (node.chidlren.length === 2) {
       return;
     }
-    return this.evaluate(node.chidlren[1]);
+    let runningEC = this.ecs[this.ecs.length - 1];
+    let newEC = new ExecutionContext(
+      runningEC.realm,
+      new EnvironmentRecord(runningEC.lexicalEnviroment),
+      runningEC.variableEnviroment
+    );
+    this.ecs.push(newEC);
+    let result = this.evaluate(node.chidlren[1]);
+    this.ecs.pop(newEC);
+    return result;
   }
   //   EOF() {
   //     return null;
